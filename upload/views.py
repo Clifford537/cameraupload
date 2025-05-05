@@ -1,74 +1,70 @@
 from django.shortcuts import render, redirect
+from django.core.exceptions import ValidationError
 from django.contrib import messages
 from .models import Document
 from .forms import DocumentForm
-from django.db import models
 from django.shortcuts import render
-from django.http import HttpResponse
-from django.core.files.storage import default_storage
-from PIL import Image
-import os
-from io import BytesIO
-from django.views import View
+from django.contrib.auth.decorators import login_required
+from .models import Document, UploadedImage
 
 
-def upload_document(request):
-    if request.method == "POST":
+def home(request):
+    return render(request, 'upload/home.html')
+# Handle PDF and other files upload
+def upload_file(request):
+    if request.method == 'POST':
         form = DocumentForm(request.POST, request.FILES)
         if form.is_valid():
-            # Check if a file with the same content already exists
-            uploaded_file = form.cleaned_data.get("file")
-            if Document.objects.filter(file=uploaded_file.name).exists():
-                messages.error(request, "This document has already been uploaded.")
+            uploaded_file = request.FILES['file']
+            # Validate file type
+            if uploaded_file.content_type not in ['application/pdf']:
+                messages.error(request, "Only PDF files are allowed.")
             else:
-                form.save()
-                messages.success(request, "File uploaded successfully!")
-                return redirect("upload_document")
+                try:
+                    form.save()
+                    messages.success(request, "PDF uploaded successfully.")
+                    return redirect('upload_file')
+                except ValidationError as e:
+                    messages.error(request, f"Error: {e}")
         else:
             messages.error(request, "Invalid form submission.")
     else:
         form = DocumentForm()
-    
-    return render(request, "upload/upload.html", {"form": form})
 
+    # Show uploaded files (including PDFs)
+    documents = Document.objects.all().order_by('-uploaded_at')
+    return render(request, 'upload/upload_file.html', {'form': form, 'documents': documents})
 
-from django.shortcuts import render
-from django.http import HttpResponse
-from django.core.files.base import ContentFile
-from PIL import Image
-import os
-from io import BytesIO
-from django.views import View
-from .models import UploadedImage, ConvertedPDF
+# Handle image upload (JPEG/PNG)
+def upload_image(request):
+    if request.method == 'POST':
+        form = DocumentForm(request.POST, request.FILES)
+        if form.is_valid():
+            uploaded_file = request.FILES['file']
+            # Validate file type
+            if uploaded_file.content_type not in ['image/jpeg', 'image/png']:
+                messages.error(request, "Only JPEG and PNG image files are allowed.")
+            else:
+                try:
+                    form.save()
+                    messages.success(request, "Image uploaded successfully.")
+                    return redirect('upload_image')
+                except ValidationError as e:
+                    messages.error(request, f"Error: {e}")
+        else:
+            messages.error(request, "Invalid form submission.")
+    else:
+        form = DocumentForm()
 
-class ImageToPDFView(View):
-    def get(self, request):
-        return render(request, "upload/image_upload.html")  # Simple upload page
+    # Show uploaded images (JPEG/PNG)
+    documents = Document.objects.all().order_by('-uploaded_at')
+    return render(request, 'upload/upload_image.html', {'form': form, 'documents': documents})
+def my_uploads(request):
+    # Fetch all documents and images uploaded by the logged-in user
+    documents = Document.objects.filter(user=request.user).order_by('-uploaded_at')
+    images = UploadedImage.objects.filter(user=request.user).order_by('-uploaded_at')
 
-    def post(self, request):
-        images = request.FILES.getlist("images")  # Get multiple uploaded images
-        if not images:
-            return HttpResponse("No images uploaded", status=400)
-
-        image_list = []
-        for image in images:
-            uploaded_image = UploadedImage.objects.create(image=image)  # Save image to DB
-            img = Image.open(uploaded_image.image)
-            img = img.convert("RGB")  # Ensure compatibility with PDF
-            image_list.append(img)
-
-        if image_list:
-            pdf_filename = "converted.pdf"
-            pdf_bytes = BytesIO()
-            image_list[0].save(pdf_bytes, format="PDF", save_all=True, append_images=image_list[1:])
-            pdf_bytes.seek(0)
-
-            pdf_model = ConvertedPDF.objects.create()  # Save PDF model instance
-            pdf_model.pdf_file.save(pdf_filename, ContentFile(pdf_bytes.read()))
-            pdf_model.save()
-
-            response = HttpResponse(pdf_model.pdf_file, content_type="application/pdf")
-            response["Content-Disposition"] = f'attachment; filename="{pdf_filename}"'
-            return response
-
-        return HttpResponse("Error processing images", status=500)
+    return render(request, 'upload/my_uploads.html', {
+        'documents': documents,
+        'images': images
+    })

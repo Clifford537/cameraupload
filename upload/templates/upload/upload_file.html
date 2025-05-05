@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Upload PDF{% endblock %}
+
+{% block content %}
+    <h1>Upload PDF</h1>
+
+    {% if messages %}
+        <ul>
+            {% for message in messages %}
+                <li class="{% if message.tags == 'error' %}error{% elif message.tags == 'success' %}success{% else %}default{% endif %}">
+                    {{ message }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Upload PDF</button>
+    </form>
+
+    <hr>
+
+    <h2>Uploaded PDFs</h2>
+    {% for doc in documents %}
+        <div>
+            <strong>{{ doc.title }}</strong> ({{ doc.course }}, {{ doc.year }})<br>
+            <p>Uploaded at: {{ doc.uploaded_at }}</p>
+            {% if ".pdf" in doc.file.url %}
+                <iframe src="{{ doc.file.url }}#toolbar=0&navpanes=0&scrollbar=0"
+                        width="100%" height="600px" style="border: 1px solid #ccc;">
+                    Your browser does not support viewing PDFs. 
+                    <a href="{{ doc.file.url }}" target="_blank">Click here to download.</a>
+                </iframe>
+            {% else %}
+                <a href="{{ doc.file.url }}" target="_blank">Download/View File</a>
+            {% endif %}
+        </div>
+    {% empty %}
+        <p>No PDFs uploaded yet.</p>
+    {% endfor %}
+{% endblock %}

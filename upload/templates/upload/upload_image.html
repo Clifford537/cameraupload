@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Image{% endblock %}
+
+{% block content %}
+    <h1>Upload Image (JPEG/PNG)</h1>
+
+    {% if messages %}
+        <ul>
+            {% for message in messages %}
+            <li class="{% if message.tags == 'error' %}error{% elif message.tags == 'success' %}success{% else %}default{% endif %}">
+                {{ message }}
+            </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Upload Image</button>
+    </form>
+
+    <hr>
+
+    <h2>Uploaded Images</h2>
+    {% for doc in documents %}
+        <div>
+            <strong>{{ doc.title }}</strong> ({{ doc.course }}, {{ doc.year }})<br>
+            <p>Uploaded at: {{ doc.uploaded_at }}</p>
+            {% if ".jpg" in doc.file.url or ".jpeg" in doc.file.url or ".png" in doc.file.url %}
+                <img src="{{ doc.file.url }}" alt="{{ doc.title }}" style="max-width: 100%; height: auto;">
+            {% else %}
+                <a href="{{ doc.file.url }}" target="_blank">Download/View File</a>
+            {% endif %}
+        </div>
+    {% empty %}
+        <p>No images uploaded yet.</p>
+    {% endfor %}
+{% endblock %}

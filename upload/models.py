@@ -10,6 +10,7 @@ COURSE_CHOICES = [
 ]
 
 class Document(models.Model):
+    user = models.ForeignKey('auth.User', on_delete=models.CASCADE , default=1)  # Link to user
     course = models.CharField(max_length=20, choices=COURSE_CHOICES)
     year = models.IntegerField()
     title = models.CharField(max_length=255)
@@ -17,15 +18,15 @@ class Document(models.Model):
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('file',)  # Ensures no duplicate files are uploaded
+        unique_together = ('file',)
 
     def __str__(self):
         return f"{self.title} ({self.year}) - {self.course}"
 
 class UploadedImage(models.Model):
+    user = models.ForeignKey('auth.User', null=True, blank=True, on_delete=models.CASCADE)  # Link to user, allow null
     image = models.ImageField(upload_to="images/")
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
-class ConvertedPDF(models.Model):
-    pdf_file = models.FileField(upload_to="pdfs/")
-    created_at = models.DateTimeField(auto_now_add=True)
+    def __str__(self):
+        return f"Image uploaded at {self.uploaded_at}"

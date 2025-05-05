@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}My Uploads{% endblock %}
+
+{% block content %}
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .error-message {
+            color: red;
+        }
+        .success-message {
+            color: green;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ccc;
+            text-align: left;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        .action-link {
+            color: blue;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+    </style>
+
+    <h1>My Uploads</h1>
+
+    {% if messages %}
+        <ul>
+            {% for message in messages %}
+                <li class="{% if message.tags == 'error' %}error-message{% else %}success-message{% endif %}">
+                    {{ message }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    {% if documents %}
+        <h2>Documents</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Course</th>
+                    <th>Title</th>
+                    <th>Year</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for doc in documents %}
+                    <tr>
+                        <td>{{ doc.course }}</td>
+                        <td>{{ doc.title }}</td>
+                        <td>{{ doc.year }}</td>
+                        <td>
+                            <a href="{{ doc.file.url }}" class="action-link" target="_blank">Download/View</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No documents uploaded yet.</p>
+    {% endif %}
+
+    {% if images %}
+        <h2>Images</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Course</th>
+                    <th>Title</th>
+                    <th>Year</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for img in images %}
+                    <tr>
+                        <td>N/A</td>
+                        <td>Image (Uploaded at {{ img.uploaded_at }})</td>
+                        <td>N/A</td>
+                        <td>
+                            <a href="{{ img.image.url }}" class="action-link" target="_blank">View Image</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No images uploaded yet.</p>
+    {% endif %}
+{% endblock %}
