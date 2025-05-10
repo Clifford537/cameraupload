@@ -9,5 +9,6 @@ urlpatterns = [
      path('', views.home,name='home'), 
     path('upload/file/', views.upload_file, name='upload_file'),
     path('upload/image/', views.upload_image, name='upload_image'),
-     path('my-uploads/', views.my_uploads, name='my_uploads'),
+    path('my-uploads/', views.my_uploads, name='my_uploads'),
+    path('api/autocomplete_titles/', views.autocomplete_titles, name='autocomplete_titles'),
 ]

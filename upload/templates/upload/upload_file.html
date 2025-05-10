@@ -3,42 +3,167 @@
 {% block title %}Upload PDF{% endblock %}
 
 {% block content %}
-    <h1>Upload PDF</h1>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f2f4f8;
+        }
 
-    {% if messages %}
-        <ul>
-            {% for message in messages %}
-                <li class="{% if message.tags == 'error' %}error{% elif message.tags == 'success' %}success{% else %}default{% endif %}">
-                    {{ message }}
-                </li>
-            {% endfor %}
-        </ul>
-    {% endif %}
+        .container {
+            max-width: 700px;
+            margin: 2em auto;
+            padding: 2em;
+            background: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            border-radius: 12px;
+        }
 
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Upload PDF</button>
-    </form>
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 1.5em;
+        }
 
-    <hr>
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.2em;
+        }
 
-    <h2>Uploaded PDFs</h2>
-    {% for doc in documents %}
-        <div>
-            <strong>{{ doc.title }}</strong> ({{ doc.course }}, {{ doc.year }})<br>
-            <p>Uploaded at: {{ doc.uploaded_at }}</p>
-            {% if ".pdf" in doc.file.url %}
-                <iframe src="{{ doc.file.url }}#toolbar=0&navpanes=0&scrollbar=0"
-                        width="100%" height="600px" style="border: 1px solid #ccc;">
-                    Your browser does not support viewing PDFs. 
-                    <a href="{{ doc.file.url }}" target="_blank">Click here to download.</a>
-                </iframe>
-            {% else %}
-                <a href="{{ doc.file.url }}" target="_blank">Download/View File</a>
-            {% endif %}
-        </div>
-    {% empty %}
-        <p>No PDFs uploaded yet.</p>
-    {% endfor %}
+        label {
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 0.4em;
+        }
+
+        input[type="text"],
+        input[type="file"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 0.8em;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+
+        .submit-button {
+            background-color: #007bff;
+            color: white;
+            padding: 0.9em;
+            font-size: 1em;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .submit-button:hover {
+            background-color: #0056b3;
+        }
+
+        .message-list {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 1.5em;
+        }
+
+        .message-list li {
+            padding: 0.75em;
+            border-radius: 6px;
+            margin-bottom: 0.5em;
+        }
+
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .default { background: #e2e3e5; color: #383d41; }
+    </style>
+
+    <div class="container">
+        <h1>Upload PDF</h1>
+
+        {% if messages %}
+            <ul class="message-list">
+                {% for message in messages %}
+                    <li class="{% if message.tags == 'error' %}error{% elif message.tags == 'success' %}success{% else %}default{% endif %}">
+                        {{ message }}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <form method="post" enctype="multipart/form-data" id="upload-form">
+            {% csrf_token %}
+            <div>
+                <label for="id_course">Course</label>
+                {{ form.course }}
+            </div>
+            <div>
+                <label for="id_year">Year</label>
+                {{ form.year }}
+            </div>
+            <div>
+                <label for="id_title">Title</label>
+                {{ form.title }}
+            </div>
+            <div>
+                <label for="id_file">PDF File</label>
+                {{ form.file }}
+            </div>
+            <button type="submit" class="submit-button">Upload PDF</button>
+        </form>
+    </div>
+
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            const courseInput = $('#id_course');
+            const yearInput = $('#id_year');
+            const titleSelect = $('#id_title');
+
+            // Initialize Select2 on title select
+            titleSelect.select2({
+                placeholder: 'Search for a title',
+                allowClear: true,
+                ajax: {
+                    url: '/api/autocomplete_titles/',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            query: params.term || '',
+                            course: courseInput.val(),
+                            year: yearInput.val()
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data.titles.map(title => ({ id: title, text: title }))
+                        };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 1
+            });
+
+            // Fetch titles whenever course or year changes
+            courseInput.on('change', function() {
+                titleSelect.val(null).trigger('change');
+            });
+
+            yearInput.on('change', function() {
+                titleSelect.val(null).trigger('change');
+            });
+        });
+    </script>
 {% endblock %}

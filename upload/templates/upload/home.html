@@ -1,44 +1,7 @@
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Past Papers Uploader</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
-    .navbar {
-      background: #333; color: #fff;
-      padding: 10px 20px;
-      display: flex; align-items: center;
-    }
-    .navbar a {
-      color: #fff; text-decoration: none;
-      margin-right: 20px; font-weight: bold;
-    }
-    .navbar a:hover { text-decoration: underline; }
-    .container { padding: 40px 20px; max-width: 800px; margin: auto; }
-    h1 { margin-top: 0; }
-  </style>
-</head>
-<body>
+{% extends "base.html" %}
 
-  <nav class="navbar">
-    <a href="{% url 'home' %}">Home</a>
-    <a href="{% url 'upload_file' %}">Upload File</a>
-    <a href="{% url 'upload_image' %}">Upload Image</a>
-    <a href="{% url 'my_uploads' %}">My Uploads</a>
-    {% if user.is_authenticated %}
-      <span style="margin-left:auto;">Welcome, {{ user.username }} | 
-        <a href="{% url 'logout' %}" style="color:#ffaaaa;">Logout</a>
-      </span>
-    {% else %}
-      <span style="margin-left:auto;">
-        <a href="{% url 'login' %}" style="color:#ffaaaa;">Login</a>
-      </span>
-    {% endif %}
-  </nav>
-
+{% block content %}
   <div class="container">
     <h1>Welcome to the Past Papers Uploader</h1>
     <p>
@@ -54,6 +17,4 @@
       Make sure you’re logged in so your uploads are saved under your account.
     </p>
   </div>
-
-</body>
-</html>
+{% endblock %}
